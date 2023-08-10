@@ -1,8 +1,8 @@
 import requests
 from ipaddress import ip_network
 import pandas as pd
+import PySimpleGUI as sg
 from tabulate import tabulate
-from creds import FMC_URL, USERNAME, PASSWORD, DOMAIN
 
 # Endpoints
 AUTH_ENDPOINT = "/api/fmc_platform/v1/auth/generatetoken"
@@ -72,6 +72,45 @@ requests.packages.urllib3.disable_warnings()
 headers = {
     "Content-Type": "application/json",
 }
+
+
+layout = [
+    [sg.Text("Enter the IP or FQDN of the FMC:"), sg.InputText(key='fmc_ip')],
+    [sg.Text("Enter your username:"), sg.InputText(key='username')],
+    [sg.Text("Enter your password:"), sg.InputText(password_char='*', key='password')],
+    [sg.Text("Verify your password:"), sg.InputText(password_char='*', key='verify_password')],
+    [sg.Text("Enter the domain(Case Sensitive):"), sg.InputText(key='domain')],
+    [sg.Button("Submit"), sg.Button("Cancel")]
+]
+
+
+def login_window():
+    window = sg.Window("Login", layout)
+
+    while True:
+        event, values = window.read()
+
+        if event == sg.WIN_CLOSED or event == "Cancel":
+            break
+
+        if event == "Submit":
+            FMC_IP = values['fmc_ip']
+            USERNAME = values['username']
+            PASSWORD = values['password']
+            verify_password = values['verify_password']
+            DOMAIN = values['domain']
+
+            if not all([FMC_IP, USERNAME, PASSWORD, verify_password, DOMAIN]):
+                sg.popup_error("All fields are required!")
+                continue
+
+            if PASSWORD != verify_password:
+                sg.popup_error("Passwords do not match!")
+                continue
+
+            break
+    window.close()
+    return FMC_IP, USERNAME, PASSWORD, DOMAIN
 
 
 def authenticate(url, username, password, headers):
@@ -369,6 +408,9 @@ def convert_to_readable_df(df_rules, shadowed_pairs):
 
 
 if __name__ == '__main__':
+    FMC_IP, USERNAME, PASSWORD, DOMAIN = login_window()
+
+    FMC_URL = f'https://{FMC_IP}'
     df_rules = pd.DataFrame(columns=starting_columns)
     authenticate(FMC_URL, USERNAME, PASSWORD, headers)  # This sets up headers with the required tokens
     domain_uuid = get_domain_uuid_for_name(FMC_URL, headers, DOMAIN)
