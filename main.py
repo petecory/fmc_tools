@@ -109,26 +109,8 @@ def login_window():
                 continue
 
             break
-    return FMC_IP, USERNAME, PASSWORD, DOMAIN
-
     window.close()
-
-def on_submit():
-    fmc_ip = ip_entry.get()
-    user = user_entry.get()
-    pwd = pwd_entry.get()
-    verify_pwd = verify_pwd_entry.get()
-    dom = domain_entry.get()
-
-    if not all([fmc_ip, user, pwd, verify_pwd, dom]):
-        messagebox.showerror("Error", "All fields are required!")
-        return
-
-    if pwd != verify_pwd:
-        messagebox.showerror("Error", "Passwords do not match!")
-        return
-
-    root.destroy()  # Close the tkinter window
+    return FMC_IP, USERNAME, PASSWORD, DOMAIN
 
 
 def authenticate(url, username, password, headers):
